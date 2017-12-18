@@ -4,6 +4,8 @@ import gzip
 import requests
 import numpy as np
 
+__all__ = ['MNISTDataLoader']
+
 
 class MNISTDataLoader(object):
     def load(self):
@@ -18,7 +20,8 @@ class MNISTDataLoader(object):
             test_images = self._parse_image_data(f.read())
         with gzip.open('data/t10k-labels-idx1-ubyte.gz') as f:
             test_labels = self._parse_label_data(f.read())
-        return zip(training_images, training_labels), zip(test_images, test_labels)
+        return ([(image, label) for image, label in zip(training_images, training_labels)],
+                    [(image, label) for image, label in zip(test_images, test_labels)])
 
     def load_remote(self):
         # home page: http://yann.lecun.com/exdb/mnist/
@@ -30,7 +33,8 @@ class MNISTDataLoader(object):
         test_images = self._parse_image_data(gzip.decompress(r.content))
         r = requests.get('http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz')
         test_labels = self._parse_label_data(gzip.decompress(r.content))
-        return zip(training_images, training_labels), zip(test_images, test_labels)
+        return ([(image, label) for image, label in zip(training_images, training_labels)],
+                [(image, label) for image, label in zip(test_images, test_labels)])
 
     @staticmethod
     def _parse_image_data(content):
@@ -53,7 +57,7 @@ class MNISTDataLoader(object):
         #
         X = [None] * images
         for i in range(images):
-            X[i] = np.frombuffer(content[p:p+pixels], np.uint8)
+            X[i] = np.reshape(np.frombuffer(content[p:p+pixels], np.uint8), (pixels, 1))
             p += pixels
         return X
 
@@ -70,7 +74,7 @@ class MNISTDataLoader(object):
 
     @staticmethod
     def _one_hot_encode(k, n):
-        encoded = np.zeros(n, np.uint8)
+        encoded = np.zeros((n, 1), np.uint8)
         encoded[k] = 1
         return encoded
 
