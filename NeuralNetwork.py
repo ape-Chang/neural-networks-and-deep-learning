@@ -7,7 +7,24 @@ import MNISTDataLoader as Loader
 
 
 def sigmoid(z):
-    return 1.0 / np.exp(-z)
+    def sigma0(x):
+        return 1 / np.exp(x)
+
+    def sigma1(x):
+        # first attempt of optimization
+        x = np.clip(x, -500, 500)
+        return 1.0 / np.exp(-x)
+
+    def sigma2(x):
+        # second attempt of optimization
+        if x >= 0:
+            x = np.exp(-x)
+            return 1 / (1 + x)
+        else:
+            x = np.exp(x)
+            return x / (1 + x)
+
+    return sigma0(z)
 
 
 def sigmoid_prime(z):
@@ -49,9 +66,9 @@ class NeuralNetwork(object):
         delta = None
         for k in range(1, len(self.sizes)):
             delta = (activations[-k] - y if k == 1
-                        else np.dot(self.weights[-k+1].transpose(), delta)) * sigmoid_prime(z_values[-k])
+            else np.dot(self.weights[-k + 1].transpose(), delta)) * sigmoid_prime(z_values[-k])
             nabla_b[-k] = delta
-            nabla_w[-k] = np.dot(delta, activations[-k-1].transpose())
+            nabla_w[-k] = np.dot(delta, activations[-k - 1].transpose())
         return nabla_b, nabla_w
 
     def update_mini_batch(self, batch):
@@ -67,16 +84,19 @@ class NeuralNetwork(object):
         self.biases = [b - self.eta / m * nb for b, nb in zip(self.biases, nabla_b)]
         self.weights = [w - self.eta / m * nw for w, nw in zip(self.weights, nabla_w)]
 
-    def sgd(self, training_data, epochs = 10, batch_size = 100):
+    def sgd(self, training_data, epochs=5, batch_size=100):
         for epoch in range(epochs):
-            random.shuffle(training_data)
-            for k in range(0, len(training_data), batch_size):
-                self.update_mini_batch(training_data[k:k+batch_size])
+            self.sgd_one_epoch(training_data, batch_size)
             print("Epoch {} complete!".format(epoch))
+
+    def sgd_one_epoch(self, training_data, batch_size):
+        random.shuffle(training_data)
+        for k in range(0, len(training_data), batch_size):
+            self.update_mini_batch(training_data[k:k + batch_size])
 
 
 if __name__ == '__main__':
     loader = Loader.MNISTDataLoader()
     training_data, test_data = loader.load()
-    network = NeuralNetwork([28*28, 56, 10])
+    network = NeuralNetwork([28 * 28, 56, 10])
     network.sgd(training_data)
