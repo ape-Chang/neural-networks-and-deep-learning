@@ -3,7 +3,7 @@
 import numpy as np
 import random
 
-import MNISTDataLoader as Loader
+import loader
 
 
 def sigmoid(z):
@@ -96,7 +96,7 @@ class NeuralNetwork(object):
 
 
 if __name__ == '__main__':
-    loader = Loader.MNISTDataLoader()
+    loader = loader.MNISTDataLoader()
     training_data, test_data = loader.load()
     network = NeuralNetwork([28 * 28, 56, 10])
     network.sgd(training_data)
