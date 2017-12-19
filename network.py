@@ -17,14 +17,22 @@ def sigmoid(z):
 
     def sigma2(x):
         # second attempt of optimization
-        if x >= 0:
-            x = np.exp(-x)
-            return 1 / (1 + x)
-        else:
-            x = np.exp(x)
-            return x / (1 + x)
+        # let's vectorize it
+        # try to fix the overflow problem
+        # and the divide by zero problem
+        positive = np.copy(x)
+        positive[positive < 0] = 0
+        positive = np.exp(-positive)
+        positive = 1 / (1 + positive)
 
-    return sigma0(z)
+        negative = np.copy(x)
+        negative[negative > 0] = 0
+        negative = np.exp(negative)
+        negative = negative / (1 + negative)
+
+        return positive * negative * 2
+
+    return sigma2(z)
 
 
 def sigmoid_prime(z):
